@@ -219,7 +219,7 @@ export default function EnquiriesPage() {
             </tbody>
           </table>
         </div>
-      </div> )}
+      </div>
     </div>
   )
 }
