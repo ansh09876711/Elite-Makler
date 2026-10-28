@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import { exec } from 'child_process'
 
-export async function GET() {
-  return new Promise((resolve) => {
+export async function GET(): Promise<NextResponse> {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ success: false, message: 'Not applicable in production' })
+  }
+  return new Promise<NextResponse>((resolve) => {
     // Windows pe PID 36404 ko force kill karein, ya generic port 3000 process ko kill karein
     exec('taskkill /F /PID 36404', (err, stdout, stderr) => {
       if (err) {
