@@ -7,7 +7,22 @@ import { Users, UserCheck, ShieldAlert, Award, Search, Plus, Shield, Download, C
 // Poll interval in ms for near-real-time updates
 const POLL_INTERVAL = 5000
 
-type AdminUser = {
+interface SupabaseRawUser {
+  id: string
+  email?: string
+  created_at?: string
+  email_confirmed_at?: string
+  user_metadata?: {
+    full_name?: string
+    name?: string
+    phone?: string
+    role?: string
+    status?: string
+    account_type?: string
+  }
+}
+
+interface AdminUser {
   id: string
   name?: string
   email?: string
@@ -16,6 +31,21 @@ type AdminUser = {
   status?: string
   type?: string
   date?: string
+}
+
+/**
+ * Safely formats an ISO date string to Indian locale (DD MMM YYYY).
+ * Returns 'N/A' if the date is null, undefined, empty, or invalid.
+ */
+function formatDisplayDate(dateStr?: string | null): string {
+  if (!dateStr || typeof dateStr !== 'string') return 'N/A'
+  const parsed = new Date(dateStr)
+  if (isNaN(parsed.getTime())) return 'N/A'
+  return parsed.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
 
 export default function AdminUsersPage() {
@@ -39,10 +69,10 @@ export default function AdminUsersPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/users')
-      const json = await res.json()
-      const raw = json.users ?? []
+      const json: { users?: SupabaseRawUser[] } = await res.json()
+      const raw = Array.isArray(json.users) ? json.users : []
       // Map Supabase auth user shape to AdminUser
-      const mapped: AdminUser[] = raw.map((u: any) => ({
+      const mapped: AdminUser[] = raw.map((u) => ({
         id: u.id,
         name: u.user_metadata?.full_name || u.user_metadata?.name || '-',
         email: u.email,
@@ -104,7 +134,7 @@ export default function AdminUsersPage() {
     const rows = [
       ['Name', 'Email', 'Phone', 'Role', 'Status', 'Account Type', 'Registration Date'],
       ...filtered.map(u => [
-        u.name, u.email, u.phone, u.role, u.status, u.type, u.date ? new Date(u.date).toLocaleDateString('en-IN') : '-'
+        u.name ?? '-', u.email ?? '-', u.phone ?? '-', u.role ?? '-', u.status ?? '-', u.type ?? '-', formatDisplayDate(u.date)
       ])
     ]
     const csvContent = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
@@ -255,8 +285,8 @@ export default function AdminUsersPage() {
                         {u.type}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-white/60 text-sm">
-                      {u.date ? new Date(u.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                    <td className="px-5 py-4 text-white/60 text-sm whitespace-nowrap">
+                      {formatDisplayDate(u.date)}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">

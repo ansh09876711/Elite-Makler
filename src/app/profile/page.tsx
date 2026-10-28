@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -39,7 +39,9 @@ export default function ProfilePage() {
   }
 
   const meta = user.user_metadata
-  const joined = new Date(user.created_at).toLocaleDateString(lang === 'en' ? 'en-IN' : 'hi-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+  const joined = user.created_at && !isNaN(new Date(user.created_at).getTime())
+    ? new Date(user.created_at).toLocaleDateString(lang === 'en' ? 'en-IN' : 'hi-IN', { year: 'numeric', month: 'long', day: 'numeric' })
+    : 'N/A'
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF9F6]">
